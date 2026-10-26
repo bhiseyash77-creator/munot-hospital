@@ -1,0 +1,5 @@
+package com.munot.hospital.entity;
+
+public enum NotificationType {
+    APPOINTMENT_CONFIRMATION, APPOINTMENT_REMINDER, FOLLOWUP_REMINDER, PRESCRIPTION_AVAILABLE, GENERAL
+}

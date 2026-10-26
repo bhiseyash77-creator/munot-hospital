@@ -1,0 +1,62 @@
+name: Deploy backend to Oracle Cloud
+
+on:
+  push:
+    branches: [main]          # tumcha branch 'master' asel tar ithe 'master' liha
+  workflow_dispatch:           # GitHub > Actions madhun manually pan run karta yeto
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build jar
+        run: mvn -B -ntp clean package -DskipTests
+
+      - name: Locate jar
+        id: jar
+        run: |
+          JAR="$(ls target/hospital-*.jar | grep -v '\.original$' | head -n 1)"
+          test -f "$JAR"
+          echo "path=$JAR" >> "$GITHUB_OUTPUT"
+          ls -lh "$JAR"
+
+      - name: Prepare SSH
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" | tr -d '\r' > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -T 15 -H "$OCI_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload jar to server
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+        run: |
+          scp -i ~/.ssh/id_deploy -o IdentitiesOnly=yes \
+            "${{ steps.jar.outputs.path }}" "$OCI_USER@$OCI_HOST:/tmp/munot-new.jar"
+
+      - name: Install, restart and health-check (auto rollback on failure)
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes "$OCI_USER@$OCI_HOST" \
+            "sudo /usr/local/bin/munot-deploy /tmp/munot-new.jar"
