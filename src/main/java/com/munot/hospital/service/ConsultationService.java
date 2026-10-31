@@ -1,3 +1,4 @@
+//
 //package com.munot.hospital.service;
 //
 //import com.munot.hospital.common.ApiException;
@@ -76,8 +77,21 @@
 //    @Transactional
 //    public ConsultationView save(Long id, ConsultationSaveRequest req, User actor) {
 //        Consultation c = own(id, actor);
-//        if (c.getStatus() != ConsultationStatus.IN_PROGRESS) throw ApiException.conflict("Consultation is already completed.");
+//        boolean completed = c.getStatus() == ConsultationStatus.COMPLETED;
+//        if (completed) {
+//            // Editing a completed consultation / prescription: same owner-only check as above, but the record must stay valid and
+//            // nothing else is touched (appointment, queue, follow-up and billing are not changed by apply()).
+//            boolean hasDiagnosis = req.diagnoses() != null && req.diagnoses().stream().anyMatch(d -> d.name() != null && !d.name().isBlank());
+//            if (!hasDiagnosis) throw ApiException.badRequest("A completed consultation must keep at least one diagnosis.");
+//            boolean noItems = req.items() == null || req.items().isEmpty();
+//            if (noItems && prescriptions.findByConsultationId(c.getId()).isPresent()) {
+//                throw ApiException.badRequest("An issued prescription must keep at least one medicine.");
+//            }
+//        } else if (c.getStatus() != ConsultationStatus.IN_PROGRESS) {
+//            throw ApiException.conflict("Consultation is not editable.");
+//        }
 //        apply(c, req);
+//        if (completed) audit.log("PRESCRIPTION_EDITED", "Consultation", id, "edited after completion");
 //        return mapper.consultation(c);
 //    }
 //
@@ -163,8 +177,8 @@
 //        FollowUp f = createFollowUp(c, req.followUp(), req.customDate(), req.customTime(), actor);
 //        String msg = f == null ? "Consultation completed. No follow-up requested."
 //                : f.getStatus() == FollowUpStatus.SCHEDULED
-//                    ? "Follow-up appointment booked for " + f.getFollowUpDate() + " at " + f.getFollowUpTime() + ". Reminders are scheduled."
-//                    : "Follow-up recorded for " + f.getFollowUpDate() + ", but no free slot could be booked automatically. The patient will be reminded and reception should book a time.";
+//                ? "Follow-up appointment booked for " + f.getFollowUpDate() + " at " + f.getFollowUpTime() + ". Reminders are scheduled."
+//                : "Follow-up recorded for " + f.getFollowUpDate() + ", but no free slot could be booked automatically. The patient will be reminded and reception should book a time.";
 //        audit.log("CONSULTATION_COMPLETED", "Consultation", c.getId(), "followUp=" + req.followUp());
 //        return new CompleteResponse(mapper.consultation(c), f == null ? null : mapper.followUp(f), msg);
 //    }
@@ -364,6 +378,7 @@ public class ConsultationService {
         c.setTreatmentPlan(req.treatmentPlan());
         c.setTestsAdvised(req.testsAdvised());
         c.setAdvice(req.advice());
+        c.setFollowUpDays(req.followUpDays()); // prescription advice only; never touches an existing follow-up appointment
         String lang = req.language() == null ? "EN" : req.language();
         c.setLanguage(lang);
         boolean local = !"EN".equals(lang);
@@ -449,7 +464,7 @@ public class ConsultationService {
     private FollowUp createFollowUp(Consultation c, FollowUpOption option, LocalDate customDate, LocalTime customTime, User actor) {
         LocalDate target;
         try {
-            target = FollowUpCalc.targetDate(LocalDate.now(), option, customDate);
+            target = FollowUpCalc.targetDate(LocalDate.now(), option, customDate, c.getFollowUpDays());
         } catch (IllegalArgumentException e) {
             throw ApiException.badRequest(e.getMessage());
         }

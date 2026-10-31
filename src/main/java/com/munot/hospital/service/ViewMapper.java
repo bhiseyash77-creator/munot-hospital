@@ -1,3 +1,4 @@
+//
 //package com.munot.hospital.service;
 //
 //import com.munot.hospital.dto.*;
@@ -95,7 +96,8 @@
 //                rx.getPatient().getFullName(), rx.getDoctor().getUser().getFullName(), rx.getCreatedAt(), rx.getNotes(), items(rx), dx,
 //                rx.getPatient().getPatientCode(), rx.getPatient().getPhone(), rx.getPatient().getDateOfBirth(), rx.getPatient().getGender(),
 //                rx.getDoctor().getQualification(), rx.getDoctor().getRegistrationNumber(), rx.getConsultation().getAdvice(), rx.getConsultation().getTestsAdvised(),
-//                rx.getConsultation().getLanguage(), rx.getConsultation().getAdviceLocal(), rx.getConsultation().getTestsAdvisedLocal());
+//                rx.getConsultation().getLanguage(), rx.getConsultation().getAdviceLocal(), rx.getConsultation().getTestsAdvisedLocal(),
+//                rx.getConsultation().getSymptoms(), rx.getConsultation().getExaminationNotes());
 //    }
 //
 //    public ReportView report(MedicalReport r) {
@@ -207,7 +209,7 @@ public class ViewMapper {
                 c.getPatient().getFullName(), c.getDoctor().getId(), c.getDoctor().getUser().getFullName(), c.getSymptoms(),
                 c.getExaminationNotes(), c.getTreatmentPlan(), c.getTestsAdvised(), c.getAdvice(), c.getStatus(), c.getStartedAt(),
                 c.getCompletedAt(), dx, items(rx), rx == null ? null : rx.getNotes(), rx == null ? null : rx.getId(), fu,
-                c.getLanguage(), c.getAdviceLocal(), c.getTestsAdvisedLocal());
+                c.getLanguage(), c.getAdviceLocal(), c.getTestsAdvisedLocal(), c.getFollowUpDays());
     }
 
     public PrescriptionView prescription(Prescription rx) {
@@ -217,7 +219,7 @@ public class ViewMapper {
                 rx.getPatient().getPatientCode(), rx.getPatient().getPhone(), rx.getPatient().getDateOfBirth(), rx.getPatient().getGender(),
                 rx.getDoctor().getQualification(), rx.getDoctor().getRegistrationNumber(), rx.getConsultation().getAdvice(), rx.getConsultation().getTestsAdvised(),
                 rx.getConsultation().getLanguage(), rx.getConsultation().getAdviceLocal(), rx.getConsultation().getTestsAdvisedLocal(),
-                rx.getConsultation().getSymptoms(), rx.getConsultation().getExaminationNotes());
+                rx.getConsultation().getSymptoms(), rx.getConsultation().getExaminationNotes(), rx.getConsultation().getFollowUpDays());
     }
 
     public ReportView report(MedicalReport r) {

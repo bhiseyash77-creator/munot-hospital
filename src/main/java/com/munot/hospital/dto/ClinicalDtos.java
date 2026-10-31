@@ -1,3 +1,4 @@
+//
 //package com.munot.hospital.dto;
 //
 //import com.munot.hospital.entity.*;
@@ -36,7 +37,8 @@
 //                                   LocalDateTime date, String notes, List<PrescriptionItemDto> items, List<String> diagnoses,
 //                                   String patientCode, String patientPhone, LocalDate patientDob, String patientGender,
 //                                   String doctorQualification, String doctorRegistrationNumber, String advice, String testsAdvised,
-//                                   String language, String adviceLocal, String testsAdvisedLocal) {}
+//                                   String language, String adviceLocal, String testsAdvisedLocal,
+//                                   String symptoms, String examinationNotes) {}
 //
 //    public record FollowUpView(Long id, Long patientId, String patientName, String doctorName, LocalDate date, LocalTime time,
 //                               FollowUpStatus status, Long appointmentId, String appointmentCode, String notes) {}
@@ -52,6 +54,7 @@
 //
 //    public record MedicineView(Long id, String name, String composition, int useCount) {}
 //}
+
 package com.munot.hospital.dto;
 
 import com.munot.hospital.entity.*;
@@ -74,7 +77,8 @@ public final class ClinicalDtos {
     public record ConsultationSaveRequest(String symptoms, String examinationNotes, String treatmentPlan, String testsAdvised,
                                           String advice, @Valid List<DiagnosisDto> diagnoses, @Valid List<PrescriptionItemDto> items,
                                           String prescriptionNotes, @Pattern(regexp = "^(EN|MR|HI)$") String language,
-                                          @Size(max = 5000) String adviceLocal, @Size(max = 5000) String testsAdvisedLocal) {}
+                                          @Size(max = 5000) String adviceLocal, @Size(max = 5000) String testsAdvisedLocal,
+                                          @Min(1) @Max(365) Integer followUpDays) {}
 
     public record CompleteRequest(@Valid ConsultationSaveRequest consultation, @NotNull FollowUpOption followUp,
                                   LocalDate customDate, LocalTime customTime) {}
@@ -84,14 +88,14 @@ public final class ClinicalDtos {
                                    String testsAdvised, String advice, ConsultationStatus status, LocalDateTime startedAt,
                                    LocalDateTime completedAt, List<DiagnosisDto> diagnoses, List<PrescriptionItemDto> items,
                                    String prescriptionNotes, Long prescriptionId, FollowUpView followUp,
-                                   String language, String adviceLocal, String testsAdvisedLocal) {}
+                                   String language, String adviceLocal, String testsAdvisedLocal, Integer followUpDays) {}
 
     public record PrescriptionView(Long id, String code, Long consultationId, Long patientId, String patientName, String doctorName,
                                    LocalDateTime date, String notes, List<PrescriptionItemDto> items, List<String> diagnoses,
                                    String patientCode, String patientPhone, LocalDate patientDob, String patientGender,
                                    String doctorQualification, String doctorRegistrationNumber, String advice, String testsAdvised,
                                    String language, String adviceLocal, String testsAdvisedLocal,
-                                   String symptoms, String examinationNotes) {}
+                                   String symptoms, String examinationNotes, Integer followUpDays) {}
 
     public record FollowUpView(Long id, Long patientId, String patientName, String doctorName, LocalDate date, LocalTime time,
                                FollowUpStatus status, Long appointmentId, String appointmentCode, String notes) {}
